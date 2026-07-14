@@ -3,6 +3,7 @@ using Generio.Api.Configuration;
 using Generio.Api.Features.Admin;
 using Generio.Api.Features.Auth;
 using Generio.Api.Features.Public;
+using Generio.Api.Infrastructure;
 using Generio.Api.Infrastructure.Auth;
 using Generio.Api.Infrastructure.Data;
 using Generio.Api.Infrastructure.Notifications;
@@ -23,12 +24,27 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog((context, services, configuration) => configuration
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext()
-        .WriteTo.Console()
-        .WriteTo.File("logs/generio-api-.log", rollingInterval: RollingInterval.Day));
+    // Railway injects PORT; prefer it over Dockerfile ASPNETCORE_URLS when present.
+    var railwayPort = Environment.GetEnvironmentVariable("PORT");
+    if (!string.IsNullOrWhiteSpace(railwayPort))
+    {
+        builder.WebHost.UseUrls($"http://0.0.0.0:{railwayPort}");
+    }
+
+    builder.Host.UseSerilog((context, services, configuration) =>
+    {
+        configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .WriteTo.Console();
+
+        // File logs only in Development — Railway filesystem is ephemeral/read-only outside volumes.
+        if (context.HostingEnvironment.IsDevelopment())
+        {
+            configuration.WriteTo.File("logs/generio-api-.log", rollingInterval: RollingInterval.Day);
+        }
+    });
 
     builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
     builder.Services.Configure<CaptchaOptions>(builder.Configuration.GetSection(CaptchaOptions.SectionName));
@@ -36,8 +52,7 @@ try
     builder.Services.Configure<WhatsAppOptions>(builder.Configuration.GetSection(WhatsAppOptions.SectionName));
     builder.Services.AddGenerioMediaStorage(builder.Configuration);
 
-    var connectionString = builder.Configuration.GetConnectionString("Default")
-        ?? throw new InvalidOperationException("Connection string 'Default' is missing.");
+    var connectionString = DatabaseConnection.Resolve(builder.Configuration);
 
     builder.Services.AddDbContext<GenerioDbContext>(options =>
         options.UseNpgsql(connectionString));

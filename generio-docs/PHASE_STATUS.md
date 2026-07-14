@@ -12,7 +12,7 @@
 | 7 | CMS Content Modules | **Complete** | See `phases/PHASE_7.md` |
 | 8 | Media and SEO (English) | **Complete** | See `phases/PHASE_8.md` |
 | 9 | Single Contact Form and Notifications | **Complete** | See `phases/PHASE_9.md` |
-| 10 | English MVP Launch | Not started | Next — pick cloud stack here |
+| 10 | English MVP Launch | In progress | Railway packaging — see `RAILWAY.md` |
 | 11 | Arabic and Expansion | Not started | Post-MVP |
 
 ## Docs map
@@ -23,4 +23,5 @@
 - `CONTENT_INVENTORY.md` — Generio copy inventory  
 - `CONTENT_MODEL.md` — entity model  
 - `LOCAL_SETUP.md` — how to run web + API + Postgres  
+- `RAILWAY.md` — Railway deploy (API + web + Postgres)  
 - `phases/PHASE_N.md` — per-phase completion notes  
