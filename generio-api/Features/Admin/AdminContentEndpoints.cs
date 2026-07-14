@@ -41,8 +41,9 @@ public static class AdminContentEndpoints
         {
             if (!http.User.HasPermission(PermissionCodes.PagesView)) return Results.Forbid();
             var page = await db.Pages.Include(p => p.Sections.OrderBy(s => s.DisplayOrder))
+                .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Id == id);
-            return page is null ? Results.NotFound() : Results.Ok(page);
+            return page is null ? Results.NotFound() : Results.Ok(ToPageDetail(page));
         });
 
         group.MapPost("/pages", async (UpsertPageRequest request, GenerioDbContext db, AuditService audit, HttpContext http) =>
@@ -67,7 +68,7 @@ public static class AdminContentEndpoints
             db.Pages.Add(page);
             await db.SaveChangesAsync();
             await audit.WriteAsync("Create", "Page", page.Id.ToString(), page.Slug);
-            return Results.Created($"/api/admin/pages/{page.Id}", page);
+            return Results.Created($"/api/admin/pages/{page.Id}", ToPageDetail(page));
         });
 
         group.MapPut("/pages/{id:guid}", async (Guid id, UpsertPageRequest request, GenerioDbContext db, AuditService audit, HttpContext http) =>
@@ -89,7 +90,7 @@ public static class AdminContentEndpoints
             page.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
             await audit.WriteAsync("Update", "Page", page.Id.ToString(), page.Slug);
-            return Results.Ok(page);
+            return Results.Ok(ToPageDetail(page));
         });
 
         group.MapPut("/pages/{pageId:guid}/sections", async (Guid pageId, UpsertSectionsRequest request, GenerioDbContext db, AuditService audit, HttpContext http) =>
@@ -123,8 +124,10 @@ public static class AdminContentEndpoints
             page.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
             await audit.WriteAsync("Update", "PageSections", pageId.ToString());
-            var refreshed = await db.Pages.Include(p => p.Sections.OrderBy(s => s.DisplayOrder)).FirstAsync(p => p.Id == pageId);
-            return Results.Ok(refreshed);
+            var refreshed = await db.Pages.Include(p => p.Sections.OrderBy(s => s.DisplayOrder))
+                .AsNoTracking()
+                .FirstAsync(p => p.Id == pageId);
+            return Results.Ok(ToPageDetail(refreshed));
         });
     }
 
@@ -267,9 +270,10 @@ public static class AdminContentEndpoints
             if (!http.User.HasPermission(PermissionCodes.MarketsView)) return Results.Forbid();
             var regions = await db.MarketRegions
                 .Include(r => r.Countries.OrderBy(c => c.DisplayOrder))
+                .AsNoTracking()
                 .OrderBy(r => r.DisplayOrder)
                 .ToListAsync();
-            return Results.Ok(regions);
+            return Results.Ok(regions.Select(ToMarketRegionDetail));
         });
 
         group.MapPost("/markets/regions", async (UpsertMarketRegionRequest request, GenerioDbContext db, AuditService audit, HttpContext http) =>
@@ -349,7 +353,11 @@ public static class AdminContentEndpoints
             region.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
             await audit.WriteAsync("Update", "MarketCountries", regionId.ToString());
-            return Results.Ok(await db.MarketRegions.Include(r => r.Countries.OrderBy(c => c.DisplayOrder)).FirstAsync(r => r.Id == regionId));
+            var refreshed = await db.MarketRegions
+                .Include(r => r.Countries.OrderBy(c => c.DisplayOrder))
+                .AsNoTracking()
+                .FirstAsync(r => r.Id == regionId);
+            return Results.Ok(ToMarketRegionDetail(refreshed));
         });
     }
 
@@ -683,6 +691,71 @@ public static class AdminContentEndpoints
     }
 
     private static string FluentSlug(string value) => SlugHelper.ToSlug(value);
+
+    /// <summary>
+    /// Flatten page + sections without EF navigation cycles (Page ↔ PageSection),
+    /// which break System.Text.Json and show up as "Unable to load page" in admin.
+    /// </summary>
+    private static object ToPageDetail(Page page) => new
+    {
+        page.Id,
+        page.Name,
+        page.Slug,
+        page.Title,
+        page.PageType,
+        page.Status,
+        page.IsPublished,
+        page.PublishedAt,
+        page.CreatedAt,
+        page.UpdatedAt,
+        sections = page.Sections
+            .OrderBy(s => s.DisplayOrder)
+            .Select(s => new
+            {
+                s.Id,
+                s.PageId,
+                s.SectionType,
+                s.Title,
+                s.Subtitle,
+                s.Description,
+                s.ContentJson,
+                s.BackgroundImageId,
+                s.DisplayOrder,
+                s.IsVisible,
+                s.CreatedAt,
+                s.UpdatedAt
+            })
+    };
+
+    private static object ToMarketRegionDetail(MarketRegion region) => new
+    {
+        region.Id,
+        region.Name,
+        region.Slug,
+        region.Description,
+        region.HighlightColor,
+        region.BoundaryJson,
+        region.CentroidLat,
+        region.CentroidLng,
+        region.DisplayOrder,
+        region.IsActive,
+        region.CreatedAt,
+        region.UpdatedAt,
+        countries = region.Countries
+            .OrderBy(c => c.DisplayOrder)
+            .Select(c => new
+            {
+                c.Id,
+                c.MarketRegionId,
+                c.Name,
+                c.IsoCode,
+                c.Latitude,
+                c.Longitude,
+                c.ShortDescription,
+                c.DisplayOrder,
+                c.IsActive
+            })
+    };
 }
 
 public record UpsertPageRequest(string Name, string? Slug, string Title, string? PageType, bool IsPublished);

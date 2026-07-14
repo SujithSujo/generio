@@ -8,7 +8,7 @@ export function useAdminFetch<T>(
   fetcher: () => Promise<T>,
   onSuccess: (data: T) => void,
   onError: (message: string) => void,
-  errorMessage: string,
+  fallbackError: string,
   deps: unknown[],
 ) {
   useEffect(() => {
@@ -18,8 +18,14 @@ export function useAdminFetch<T>(
       .then((data) => {
         if (!cancelled) onSuccess(data);
       })
-      .catch(() => {
-        if (!cancelled) onError(errorMessage);
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          const detail =
+            err && typeof err === "object" && "message" in err
+              ? String((err as { message: string }).message)
+              : "";
+          onError(detail && detail.length < 400 ? detail : fallbackError);
+        }
       });
     return () => {
       cancelled = true;

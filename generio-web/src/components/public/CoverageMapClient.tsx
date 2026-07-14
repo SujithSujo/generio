@@ -54,6 +54,19 @@ function MapFocus({
   const map = useMap();
 
   useEffect(() => {
+    const invalidate = () => map.invalidateSize({ animate: false });
+    invalidate();
+    const t1 = window.setTimeout(invalidate, 50);
+    const t2 = window.setTimeout(invalidate, 300);
+    window.addEventListener("resize", invalidate);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.removeEventListener("resize", invalidate);
+    };
+  }, [map]);
+
+  useEffect(() => {
     map.fitBounds(COVERAGE_BOUNDS, { padding: [28, 28], animate: false });
   }, [map]);
 
@@ -102,9 +115,9 @@ export function CoverageMapClient({ regions }: CoverageMapClientProps) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.35fr_0.9fr]">
-      <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#072b3d] shadow-[0_40px_80px_-48px_rgba(7,43,61,0.65)]">
-        <div className="px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
+    <div className="grid gap-6 lg:grid-cols-[1.35fr_0.9fr] lg:items-stretch">
+      <div className="flex min-h-[520px] flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#072b3d] shadow-[0_40px_80px_-48px_rgba(7,43,61,0.65)] lg:min-h-[640px]">
+        <div className="shrink-0 px-5 pb-3 pt-5 sm:px-6 sm:pt-6">
           <p className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[#7ec8e8]">
             Interactive coverage
           </p>
@@ -113,12 +126,12 @@ export function CoverageMapClient({ regions }: CoverageMapClientProps) {
           </p>
         </div>
 
-        <div className="relative mx-3 mb-3 h-[380px] overflow-hidden rounded-[1.4rem] sm:mx-4 sm:mb-4 sm:h-[460px]">
+        <div className="relative mx-3 mb-3 min-h-[380px] flex-1 overflow-hidden rounded-[1.4rem] sm:mx-4 sm:mb-4 sm:min-h-[460px]">
           <MapContainer
             bounds={COVERAGE_BOUNDS}
             scrollWheelZoom
-            className="generio-leaflet-map h-full w-full"
-            style={{ background: "#0a3244" }}
+            className="generio-leaflet-map absolute inset-0 h-full w-full"
+            style={{ height: "100%", width: "100%", background: "#0a3244" }}
           >
             <TileLayer
               attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, Maxar, Earthstar Geographics'
@@ -176,7 +189,7 @@ export function CoverageMapClient({ regions }: CoverageMapClientProps) {
           </MapContainer>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto px-4 pb-5 sm:px-6 lg:hidden">
+        <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-5 sm:px-6 lg:hidden">
           {sorted.map((region) => {
             const selected = region.slug === active?.slug;
             return (
@@ -197,7 +210,7 @@ export function CoverageMapClient({ regions }: CoverageMapClientProps) {
         </div>
       </div>
 
-      <aside className="flex flex-col overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white">
+      <aside className="flex min-h-[520px] flex-col overflow-hidden rounded-[2rem] border border-[var(--border)] bg-white lg:min-h-[640px]">
         <div className="border-b border-[var(--border)] px-6 py-6">
           <p className="text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--brand-primary)]">
             Region detail

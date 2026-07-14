@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Generio.Api.Configuration;
 using Generio.Api.Features.Admin;
@@ -44,6 +45,12 @@ try
         {
             configuration.WriteTo.File("logs/generio-api-.log", rollingInterval: RollingInterval.Day);
         }
+    });
+
+    builder.Services.ConfigureHttpJsonOptions(options =>
+    {
+        // Guard against EF navigation cycles (e.g. Page ↔ PageSection) if a raw entity is returned.
+        options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
     builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
