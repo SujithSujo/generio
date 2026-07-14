@@ -52,7 +52,7 @@ try
     builder.Services.Configure<WhatsAppOptions>(builder.Configuration.GetSection(WhatsAppOptions.SectionName));
     builder.Services.AddGenerioMediaStorage(builder.Configuration);
 
-    var connectionString = DatabaseConnection.Resolve(builder.Configuration);
+    var connectionString = DatabaseConnection.Resolve(builder.Configuration, builder.Environment);
 
     builder.Services.AddDbContext<GenerioDbContext>(options =>
         options.UseNpgsql(connectionString));

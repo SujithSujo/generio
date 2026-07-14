@@ -32,8 +32,8 @@ Copy / link these after Postgres and the web service have public URLs:
 
 | Variable | Value |
 |----------|--------|
-| `DATABASE_URL` | **Reference** → Postgres `DATABASE_URL` |
-| `ASPNETCORE_ENVIRONMENT` | `Production` |
+| `DATABASE_URL` | **Reference** → Postgres `DATABASE_URL` (required) |
+| `ASPNETCORE_ENVIRONMENT` | `Production` (Dockerfile also defaults this) |
 | `Jwt__SigningKey` | Long random secret (32+ chars) |
 | `Jwt__Issuer` | `generio-api` |
 | `Jwt__Audience` | `generio-web` |
@@ -43,6 +43,16 @@ Copy / link these after Postgres and the web service have public URLs:
 | `Site__PublicBaseUrl` | Web public URL |
 | `Seed__AdminEmail` | Your admin email |
 | `Seed__AdminPassword` | Strong password (change after first login) |
+
+Do **not** set `ConnectionStrings__Default` to `Host=localhost;Port=5433…` on Railway.
+
+**Common failure:** `Failed to connect to 127.0.0.1:5433` — the API never received Postgres credentials.
+
+1. API service → **Variables**
+2. Delete any `ConnectionStrings__Default` pointing at localhost
+3. **Add variable** → **Add reference** → Postgres → `DATABASE_URL` (or `DATABASE_PRIVATE_URL`)
+4. Redeploy the API
+
 
 Optional:
 
