@@ -1,0 +1,38 @@
+# Roots
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.log
+logs/
+
+# .NET
+**/bin/
+**/obj/
+**/.vs/
+*.user
+*.suo
+**/App_Data/
+_build_phase8/
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+**/appsettings.*.local.json
+**/secrets.json
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Docker
+postgres-data/
+
+# Misc
+*.tmp

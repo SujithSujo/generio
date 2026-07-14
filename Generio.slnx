@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/generio-api/">
+    <Project Path="generio-api/Generio.Api.csproj" />
+  </Folder>
+</Solution>
