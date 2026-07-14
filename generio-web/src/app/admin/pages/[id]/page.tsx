@@ -133,7 +133,11 @@ export default function AdminPageEditorPage() {
           backgroundImageId: section.backgroundImageId || null,
         })),
       );
-      setMessage("Sections saved.");
+      setMessage(
+        isPublished
+          ? "Sections saved. Refresh the public page to see changes."
+          : "Sections saved as draft. Publish the page before they appear publicly.",
+      );
       await load();
     } catch (err) {
       setError(errorMessage(err, "Unable to save sections."));
@@ -353,7 +357,7 @@ export default function AdminPageEditorPage() {
           ))}
 
           {canEdit ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setSections([...sections, blankSection(sections.length + 1)])}
@@ -364,6 +368,10 @@ export default function AdminPageEditorPage() {
               <button type="button" disabled={saving} onClick={saveSections} className={adminPrimaryButtonClass}>
                 {saving ? "Saving…" : "Save sections"}
               </button>
+              <p className="w-full text-xs text-[var(--ink-muted)]">
+                Section Description, titles, and content only go live after <strong>Save sections</strong>
+                {isPublished ? "" : " and publishing the page"}.
+              </p>
             </div>
           ) : null}
         </div>

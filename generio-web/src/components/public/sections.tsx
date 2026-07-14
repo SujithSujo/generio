@@ -150,7 +150,7 @@ export function HeroSection({
 
 export function IntroductionSection({ section }: { section: PageSection }) {
   const body = section.description?.trim() || COMPANY_INTRO;
-  const paragraphs = body.split(/\n\n+/);
+  const isHtml = /<\/?[a-z][\s\S]*>/i.test(body);
 
   return (
     <section className="border-b border-[var(--border)] bg-white py-20 sm:py-28">
@@ -163,11 +163,20 @@ export function IntroductionSection({ section }: { section: PageSection }) {
             </h2>
           </Reveal>
           <div className="space-y-6">
-            {paragraphs.map((paragraph, index) => (
-              <Reveal key={paragraph.slice(0, 24)} delayMs={index * 80}>
-                <p className="text-lg leading-8 text-[var(--ink-muted)]">{paragraph}</p>
+            {isHtml ? (
+              <Reveal>
+                <div
+                  className="prose prose-lg max-w-none text-[var(--ink-muted)] prose-p:leading-8"
+                  dangerouslySetInnerHTML={{ __html: body }}
+                />
               </Reveal>
-            ))}
+            ) : (
+              body.split(/\n\n+/).map((paragraph, index) => (
+                <Reveal key={`${index}-${paragraph.slice(0, 24)}`} delayMs={index * 80}>
+                  <p className="text-lg leading-8 text-[var(--ink-muted)]">{paragraph}</p>
+                </Reveal>
+              ))
+            )}
           </div>
         </div>
       </Container>

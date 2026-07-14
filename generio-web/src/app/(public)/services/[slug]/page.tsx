@@ -16,8 +16,8 @@ type ServiceDetail = PublicService & {
 async function getService(slug: string) {
   try {
     return await apiFetch<ServiceDetail>(`/api/public/services/${slug}`, {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: "no-store",
+    });
   } catch {
     return null;
   }

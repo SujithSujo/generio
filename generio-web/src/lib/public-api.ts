@@ -97,11 +97,14 @@ function settingsMap(items: SiteSetting[]) {
   return Object.fromEntries(items.map((item) => [item.key, item.value]));
 }
 
+/** CMS edits should appear immediately on the public site. */
+const PUBLIC_FETCH = { cache: "no-store" as RequestCache };
+
 export async function getSiteSettings() {
   try {
     const items = await apiFetch<SiteSetting[]>("/api/public/site-settings", {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
     return settingsMap(items);
   } catch {
     return {
@@ -120,8 +123,8 @@ export async function getSiteSettings() {
 export async function getPageBySlug(slug: string) {
   try {
     return await apiFetch<PublicPage>(`/api/public/pages/${slug}`, {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
   } catch {
     return null;
   }
@@ -130,8 +133,8 @@ export async function getPageBySlug(slug: string) {
 export async function getServices() {
   try {
     return await apiFetch<PublicService[]>("/api/public/services", {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
   } catch {
     return [];
   }
@@ -140,8 +143,8 @@ export async function getServices() {
 export async function getIndustries() {
   try {
     return await apiFetch<PublicIndustry[]>("/api/public/industries", {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
   } catch {
     return [];
   }
@@ -150,8 +153,8 @@ export async function getIndustries() {
 export async function getMarkets() {
   try {
     return await apiFetch<MarketRegion[]>("/api/public/markets", {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
   } catch {
     return [];
   }
@@ -160,8 +163,8 @@ export async function getMarkets() {
 export async function getPartners() {
   try {
     return await apiFetch<PublicPartner[]>("/api/public/partners", {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
   } catch {
     return [];
   }
@@ -170,8 +173,8 @@ export async function getPartners() {
 export async function getSuccessStories() {
   try {
     return await apiFetch<PublicStory[]>("/api/public/success-stories", {
-      next: { revalidate: 300 },
-    } as RequestInit);
+      cache: PUBLIC_FETCH.cache,
+    });
   } catch {
     return [];
   }
